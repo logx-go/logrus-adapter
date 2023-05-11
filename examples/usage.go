@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/logx-go/logrus-adapter/pkg/logrusadapter"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -18,5 +19,10 @@ func main() {
 }
 
 func logSomething(logger logx.Logger) {
-	logger.Info("This is log message")
+	logger.Info("This is a log message", "hola", "foo")
+	logger.Warningf("This is a %s", "warning")
+	logger.Error("This is aa error message",
+		"hola", "foo",
+		"error", fmt.Errorf(`foo %s`, "bar"),
+	)
 }

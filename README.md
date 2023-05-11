@@ -35,6 +35,8 @@ func logSomething(logger logx.Logger) {
 }
 ```
 
+see [examples/usage.go](examples%2Fusage.go)
+
 ## Development
 
 ### Requirement
