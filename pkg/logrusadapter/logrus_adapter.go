@@ -42,7 +42,7 @@ type LogrusAdapter struct {
 func (l *LogrusAdapter) clone() *LogrusAdapter {
 	return &LogrusAdapter{
 		logger:          l.logger,
-		fields:          l.fields,
+		fields:          commons.CloneFieldMap(l.fields),
 		formatter:       l.formatter,
 		logLevelMap:     l.logLevelMap,
 		logLevelDefault: l.logLevelDefault,
