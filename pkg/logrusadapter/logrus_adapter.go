@@ -30,7 +30,7 @@ func New(logger *logrus.Logger) logx.Adapter {
 	}
 }
 
-// LogrusAdapter implementation to wrap a format Logger
+// LogrusAdapter implementation to wrap a formatMessage Logger
 type LogrusAdapter struct {
 	logger          *logrus.Logger
 	formatter       logx.Formatter
@@ -49,18 +49,27 @@ func (l *LogrusAdapter) clone() *LogrusAdapter {
 	}
 }
 
-func (l *LogrusAdapter) format(v ...any) string {
-	fields := l.fields
+func (l *LogrusAdapter) formatMessage(v ...any) string {
 	if len(v) < 1 {
 		if l.formatter == nil {
 			return ""
 		}
 
-		return l.formatter.Format("", fields)
+		return l.formatter.Format("", l.fields)
 	}
 
 	msg := fmt.Sprintf(`%v`, v[0])
+	if l.formatter == nil {
+		return msg
+	}
 
+	return l.formatter.Format(msg, l.fields)
+}
+
+func (l *LogrusAdapter) prepareFields(v ...any) map[string]any {
+	fields := commons.CloneFieldMap(l.fields)
+
+	// skip the first entry for it's the plain message
 	for i := 1; i < len(v); i += 2 {
 		fieldName := ""
 		if i < len(v) {
@@ -75,14 +84,22 @@ func (l *LogrusAdapter) format(v ...any) string {
 		fields[fieldName] = fieldValue
 	}
 
-	if l.formatter == nil {
-		return msg
-	}
-
-	return l.formatter.Format(msg, fields)
+	return fields
 }
 
-func (l *LogrusAdapter) convertLogrusLevel(fields map[string]any) logrus.Level {
+func (l *LogrusAdapter) prepareEntry(v ...any) (*logrus.Entry, logrus.Level, string) {
+	c := l.clone()
+	c.fields = commons.SetCallerInfo(2, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
+	c.fields = c.prepareFields(v...)
+
+	lvl := c.resolveLevel(c.fields)
+	msg := c.formatMessage(v...)
+	logger := c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel))
+
+	return logger, lvl, msg
+}
+
+func (l *LogrusAdapter) resolveLevel(fields map[string]any) logrus.Level {
 	lvl := commons.GetFieldAsIntOrElse(logx.FieldNameLogLevel, fields, l.logLevelDefault)
 
 	if s, ok := l.logLevelMap[lvl]; ok {
@@ -93,105 +110,83 @@ func (l *LogrusAdapter) convertLogrusLevel(fields map[string]any) logrus.Level {
 }
 
 func (l *LogrusAdapter) Fatal(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Fatal(c.format(v...))
+	entry, _, message := l.prepareEntry(v...)
+	entry.Fatal(message)
 }
 
 func (l *LogrusAdapter) Panic(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Panic(c.format(v...))
+	entry, _, message := l.prepareEntry(v...)
+	entry.Panic(message)
 }
 
 func (l *LogrusAdapter) Print(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Log(c.convertLogrusLevel(c.fields), c.format(v...))
+	entry, level, message := l.prepareEntry(v...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Fatalf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Fatal(c.format(fmt.Sprintf(format, v...)))
+	entry, _, _ := l.prepareEntry()
+	entry.Fatal(fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Panicf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Panic(c.format(fmt.Sprintf(format, v...)))
+	entry, _, _ := l.prepareEntry()
+	entry.Panic(fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Printf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-
-	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Log(c.convertLogrusLevel(c.fields), c.format(fmt.Sprintf(format, v...)))
+	entry, level, _ := l.prepareEntry()
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Debug(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelDebug).Print(v...)
+	entry, level, message := l.prepareEntry(append(v, logx.FieldNameLogLevel, logx.LogLevelDebug)...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Info(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelInfo).Print(v...)
+	entry, level, message := l.prepareEntry(append(v, logx.FieldNameLogLevel, logx.LogLevelInfo)...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Notice(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelNotice).Print(v...)
+	entry, level, message := l.prepareEntry(append(v, logx.FieldNameLogLevel, logx.LogLevelNotice)...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Warning(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelWarning).Print(v...)
+	entry, level, message := l.prepareEntry(append(v, logx.FieldNameLogLevel, logx.LogLevelWarning)...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Error(v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelError).Print(v...)
+	entry, level, message := l.prepareEntry(append(v, logx.FieldNameLogLevel, logx.LogLevelError)...)
+	entry.Log(level, message)
 }
 
 func (l *LogrusAdapter) Debugf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelDebug).Printf(format, v...)
+	entry, level, _ := l.prepareEntry(nil, logx.FieldNameLogLevel, logx.LogLevelDebug)
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Infof(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelInfo).Printf(format, v...)
+	entry, level, _ := l.prepareEntry(nil, logx.FieldNameLogLevel, logx.LogLevelInfo)
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Noticef(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelNotice).Printf(format, v...)
+	entry, level, _ := l.prepareEntry(nil, logx.FieldNameLogLevel, logx.LogLevelNotice)
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Warningf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelWarning).Printf(format, v...)
+	entry, level, _ := l.prepareEntry(nil, logx.FieldNameLogLevel, logx.LogLevelWarning)
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) Errorf(format string, v ...any) {
-	c := l.clone()
-	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
-	c.WithField(logx.FieldNameLogLevel, logx.LogLevelError).Printf(format, v...)
+	entry, level, _ := l.prepareEntry(nil, logx.FieldNameLogLevel, logx.LogLevelError)
+	entry.Log(level, fmt.Sprintf(format, v...))
 }
 
 func (l *LogrusAdapter) WithField(name string, value any) logx.Logger {
