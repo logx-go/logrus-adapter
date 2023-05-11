@@ -49,11 +49,11 @@ func (l *LogrusAdapter) clone() *LogrusAdapter {
 	}
 }
 
-func (l *LogrusAdapter) format(v ...any) (messageF string, fieldsZ logrus.Fields) {
-	fields := commons.FilterFieldsByName(l.fields, logx.FieldNameLogLevel)
+func (l *LogrusAdapter) format(v ...any) string {
+	fields := l.fields
 	if len(v) < 1 {
 		if l.formatter == nil {
-			return "", fields
+			return ""
 		}
 
 		return l.formatter.Format("", fields)
@@ -76,7 +76,7 @@ func (l *LogrusAdapter) format(v ...any) (messageF string, fieldsZ logrus.Fields
 	}
 
 	if l.formatter == nil {
-		return msg, fields
+		return msg
 	}
 
 	return l.formatter.Format(msg, fields)
@@ -96,48 +96,42 @@ func (l *LogrusAdapter) Fatal(v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(v...)
-	c.logger.WithFields(fieldsZ).Fatal(msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Fatal(c.format(v...))
 }
 
 func (l *LogrusAdapter) Panic(v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(v...)
-	c.logger.WithFields(fieldsZ).Panic(msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Panic(c.format(v...))
 }
 
 func (l *LogrusAdapter) Print(v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(v...)
-	c.logger.WithFields(fieldsZ).Log(c.convertLogrusLevel(c.fields), msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Log(c.convertLogrusLevel(c.fields), c.format(v...))
 }
 
 func (l *LogrusAdapter) Fatalf(format string, v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(fmt.Sprintf(format, v...))
-	c.logger.WithFields(fieldsZ).Fatal(msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Fatal(c.format(fmt.Sprintf(format, v...)))
 }
 
 func (l *LogrusAdapter) Panicf(format string, v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(fmt.Sprintf(format, v...))
-	c.logger.WithFields(fieldsZ).Panic(msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Panic(c.format(fmt.Sprintf(format, v...)))
 }
 
 func (l *LogrusAdapter) Printf(format string, v ...any) {
 	c := l.clone()
 	c.fields = commons.SetCallerInfo(1, false, c.fields, logx.FieldNameCallerFunc, logx.FieldNameCallerFile, logx.FieldNameCallerLine)
 
-	msgZ, fieldsZ := c.format(fmt.Sprintf(format, v...))
-	c.logger.WithFields(fieldsZ).Log(c.convertLogrusLevel(c.fields), msgZ)
+	c.logger.WithFields(commons.FilterFieldsByName(c.fields, logx.FieldNameLogLevel)).Log(c.convertLogrusLevel(c.fields), c.format(fmt.Sprintf(format, v...)))
 }
 
 func (l *LogrusAdapter) Debug(v ...any) {
