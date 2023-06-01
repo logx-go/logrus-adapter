@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/logx-go/commons v0.0.9 h1:Zf7rIKvDAB8sQcMaxUFf2MxXnvmDjJ8m5FrrPA51IU0=
-github.com/logx-go/commons v0.0.9/go.mod h1:0iynIO8Q2hsJ3ChSITPyvpCa7fvTS/CLvCDnAy+JmKc=
+github.com/logx-go/commons v0.0.10 h1:DyLmLpgct/wf693h6w7U78QlZcMVk3WYTqqJ/OUR448=
+github.com/logx-go/commons v0.0.10/go.mod h1:0iynIO8Q2hsJ3ChSITPyvpCa7fvTS/CLvCDnAy+JmKc=
 github.com/logx-go/contract v0.0.7 h1:T8GnJVsUJeFutFJfV2uc7DHS1IFyLV5eqhh7yiMlBsQ=
 github.com/logx-go/contract v0.0.7/go.mod h1:L/PvzT7VCYmBko01BubFTY8Wdodx68nBwVRQiBYZ024=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
