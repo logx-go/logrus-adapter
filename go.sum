@@ -3,8 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/logx-go/commons v0.0.14 h1:AkazO3blMBp6byUqdJUzeOxCLCkIQbUcs/nlRSM47V0=
 github.com/logx-go/commons v0.0.14/go.mod h1:0iynIO8Q2hsJ3ChSITPyvpCa7fvTS/CLvCDnAy+JmKc=
-github.com/logx-go/contract v0.0.7 h1:T8GnJVsUJeFutFJfV2uc7DHS1IFyLV5eqhh7yiMlBsQ=
-github.com/logx-go/contract v0.0.7/go.mod h1:L/PvzT7VCYmBko01BubFTY8Wdodx68nBwVRQiBYZ024=
+github.com/logx-go/contract v0.0.11 h1:sPdIyG0jkA5xXBANSN37dhzQwKiRI3W1O1jdLHhPQ+c=
+github.com/logx-go/contract v0.0.11/go.mod h1:L/PvzT7VCYmBko01BubFTY8Wdodx68nBwVRQiBYZ024=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
